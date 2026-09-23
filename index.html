@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Snake</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main class="shell" aria-label="Jogo Snake">
+      <section class="game-card">
+        <header class="scorebar" aria-label="Placar">
+          <div>
+            <span class="score-label">Pontos</span>
+            <strong id="score">0</strong>
+          </div>
+          <div>
+            <span class="score-label">Arena</span>
+            <strong id="arenaNumber">1</strong>
+          </div>
+          <div>
+            <span class="score-label">Recorde</span>
+            <strong id="bestScore">0</strong>
+          </div>
+        </header>
+
+        <div class="board-wrap">
+          <canvas id="gameCanvas" width="480" height="480" aria-label="Tabuleiro do Snake. Deslize para controlar a cobra em telas touch."></canvas>
+        </div>
+
+        <div class="game-footer">
+          <p class="hint">Setas ou WASD para mover. ESC pausa.</p>
+          <button id="touchPauseButton" class="touch-pause-button secondary" type="button" aria-label="Pausar" title="Pausar">&#x23F8;</button>
+        </div>
+      </section>
+
+      <section id="menuScreen" class="overlay is-visible" aria-label="Menu inicial">
+        <div class="panel">
+          <h1>SNAKE</h1>
+          <div class="menu-record">Recorde <strong id="menuBestScore">0</strong></div>
+          <button id="playButton" type="button">JOGAR</button>
+        </div>
+      </section>
+
+      <section id="pauseScreen" class="overlay" aria-label="Pausa">
+        <div class="panel">
+          <h2>PAUSA</h2>
+          <button id="continueButton" type="button">CONTINUAR</button>
+          <button id="restartPauseButton" type="button">REINICIAR</button>
+          <button id="menuPauseButton" type="button" class="secondary">VOLTAR AO MENU</button>
+        </div>
+      </section>
+
+      <section id="gameOverScreen" class="overlay" aria-label="Game over">
+        <div class="panel">
+          <h2>GAME OVER</h2>
+          <div class="result-line">Pontuação <strong id="finalScore">0</strong></div>
+          <div class="result-line">Recorde <strong id="finalBestScore">0</strong></div>
+          <button id="playAgainButton" type="button">JOGAR NOVAMENTE</button>
+          <button id="menuGameOverButton" type="button" class="secondary">VOLTAR AO MENU</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/game.js"></script>
+  </body>
+</html>
