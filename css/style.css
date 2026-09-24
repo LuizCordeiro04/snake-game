@@ -227,6 +227,123 @@ canvas {
   font-size: 1.2rem;
 }
 
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-row[hidden],
+.auth-view[hidden],
+.auth-message[hidden] {
+  display: none;
+}
+
+.account-row button {
+  flex: 0 0 auto;
+}
+
+#accountGuest button {
+  width: 100%;
+}
+
+#accountUser button {
+  width: auto;
+  min-width: 72px;
+  min-height: 38px;
+}
+
+.account-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.auth-overlay {
+  z-index: 2;
+}
+
+.auth-panel {
+  width: min(100%, 360px);
+  max-height: 100%;
+  overflow-y: auto;
+  gap: 10px;
+  padding: 18px;
+}
+
+.auth-panel h2 {
+  margin-bottom: 2px;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.auth-view,
+.auth-form {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: #0a0f0d;
+  color: var(--text);
+  font: inherit;
+}
+
+.auth-form input:focus-visible {
+  outline: 2px solid var(--snake);
+  outline-offset: 2px;
+}
+
+.password-rules {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.password-rules ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 8px;
+  margin: 3px 0 0;
+  padding-left: 18px;
+}
+
+button.auth-link {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.auth-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.auth-message.is-error {
+  color: #ff8790;
+}
+
 @keyframes panel-in {
   from {
     transform: translateY(6px) scale(0.98);
