@@ -88,7 +88,7 @@ button.secondary:focus-visible {
 
 .scorebar {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 12px;
 }
@@ -100,10 +100,6 @@ button.secondary:focus-visible {
 
 .scorebar div:last-child {
   text-align: right;
-}
-
-.scorebar div:nth-child(2) {
-  text-align: center;
 }
 
 .score-label {
