@@ -1,6 +1,6 @@
 # Snake
 
-Jogo da cobrinha com arenas progressivas, comida comum e comida dourada. Jogar sem conta continua permitido, com recorde salvo neste navegador. A conta usa Supabase Auth e exibe o nickname do perfil.
+Jogo da cobrinha em um tabuleiro fixo de 22 x 22, com passagem pelas bordas, comida comum e comida dourada. Jogar sem conta continua permitido, com recorde salvo neste navegador. A conta usa Supabase Auth e exibe o nickname do perfil.
 
 ## Tecnologias
 
