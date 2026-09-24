@@ -8,7 +8,7 @@ HTML, CSS e JavaScript puro, com supabase-js v2 para autenticacao. O jogo contin
 
 ## Conta
 
-O frontend usa apenas Project URL e publishable key em `js/supabase-config.js`. Nunca coloque secret key, service_role ou senhas neste diretorio. O cadastro envia o nickname para o trigger que cria `player_profiles`; o frontend apenas le esse perfil. Pontuacoes online e ranking nao fazem parte desta versao.
+O frontend usa apenas Project URL e publishable key em `js/supabase-config.js`. Nunca coloque secret key, service_role ou senhas neste diretorio. O cadastro envia o nickname para o trigger que cria `player_profiles`; o frontend apenas le esse perfil. Ao terminar uma partida autenticada, o resultado e enviado pela Edge Function `submit-score`. Jogar sem conta mantem apenas o recorde local. O ranking ainda nao faz parte desta versao.
 
 ## Controles
 

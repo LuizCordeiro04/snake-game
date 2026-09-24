@@ -64,6 +64,7 @@
           <h2>GAME OVER</h2>
           <div class="result-line">Pontuação <strong id="finalScore">0</strong></div>
           <div class="result-line">Recorde <strong id="finalBestScore">0</strong></div>
+          <p id="onlineScoreStatus" class="auth-message" role="status" aria-live="polite" hidden></p>
           <button id="playAgainButton" type="button">JOGAR NOVAMENTE</button>
           <button id="menuGameOverButton" type="button" class="secondary">VOLTAR AO MENU</button>
         </div>
@@ -131,5 +132,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/auth.js"></script>
+    <script defer src="js/online.js"></script>
   </body>
 </html>
