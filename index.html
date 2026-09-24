@@ -39,6 +39,14 @@
           <h1>SNAKE</h1>
           <div class="menu-record">Recorde <strong id="menuBestScore">0</strong></div>
           <button id="playButton" type="button">JOGAR</button>
+          <div id="accountGuest" class="account-row">
+            <button id="openLoginButton" type="button" class="secondary">ENTRAR</button>
+          </div>
+          <div id="accountUser" class="account-row" hidden>
+            <span id="playerNickname" class="account-name"></span>
+            <button id="logoutButton" type="button" class="secondary">SAIR</button>
+          </div>
+          <p id="menuAuthNotice" class="auth-message" role="status" hidden></p>
         </div>
       </section>
 
@@ -60,8 +68,68 @@
           <button id="menuGameOverButton" type="button" class="secondary">VOLTAR AO MENU</button>
         </div>
       </section>
+
+      <section id="authScreen" class="overlay auth-overlay" aria-label="Conta">
+        <div class="panel auth-panel">
+          <div id="loginView" class="auth-view">
+            <h2>ENTRAR</h2>
+            <form id="loginForm" class="auth-form">
+              <label>E-mail<input name="email" type="email" autocomplete="email" required /></label>
+              <label>Senha<input name="password" type="password" autocomplete="current-password" required /></label>
+              <button type="submit">ENTRAR</button>
+            </form>
+            <button id="showSignupButton" type="button" class="secondary">CRIAR CONTA</button>
+            <button id="showRecoveryButton" type="button" class="auth-link">ESQUECI MINHA SENHA</button>
+          </div>
+
+          <div id="signupView" class="auth-view" hidden>
+            <h2>CRIAR CONTA</h2>
+            <form id="signupForm" class="auth-form">
+              <label>Nickname<input name="nickname" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" autocomplete="nickname" required /></label>
+              <label>E-mail<input name="email" type="email" autocomplete="email" required /></label>
+              <label>Senha<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <div class="password-rules">
+                <span>A senha deve conter:</span>
+                <ul>
+                  <li>8 caracteres ou mais</li>
+                  <li>1 letra maiúscula</li>
+                  <li>1 letra minúscula</li>
+                  <li>1 número</li>
+                </ul>
+              </div>
+              <label>Confirmar senha<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <button type="submit">CRIAR CONTA</button>
+            </form>
+            <button id="signupToLoginButton" type="button" class="secondary">JÁ TENHO CONTA</button>
+          </div>
+
+          <div id="recoveryView" class="auth-view" hidden>
+            <h2>RECUPERAR SENHA</h2>
+            <form id="recoveryForm" class="auth-form">
+              <label>E-mail<input name="email" type="email" autocomplete="email" required /></label>
+              <button type="submit">ENVIAR LINK</button>
+            </form>
+            <button id="recoveryToLoginButton" type="button" class="secondary">VOLTAR AO LOGIN</button>
+          </div>
+
+          <div id="resetView" class="auth-view" hidden>
+            <h2>NOVA SENHA</h2>
+            <form id="resetForm" class="auth-form">
+              <label>Nova senha<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <label>Confirmar senha<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <button type="submit">SALVAR SENHA</button>
+            </form>
+          </div>
+
+          <p id="authMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
+          <button id="closeAuthButton" type="button" class="secondary">VOLTAR AO MENU</button>
+        </div>
+      </section>
     </main>
 
     <script src="js/game.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/auth.js"></script>
   </body>
 </html>

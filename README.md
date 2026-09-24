@@ -1,10 +1,14 @@
 # Snake
 
-Jogo da cobrinha com arenas progressivas, comida comum e comida dourada. Funciona como site estatico ou abrindo `index.html` no navegador.
+Jogo da cobrinha com arenas progressivas, comida comum e comida dourada. Jogar sem conta continua permitido, com recorde salvo neste navegador. A conta usa Supabase Auth e exibe o nickname do perfil.
 
 ## Tecnologias
 
-HTML, CSS e JavaScript puro. Nao requer servidor, banco de dados ou bibliotecas externas.
+HTML, CSS e JavaScript puro, com supabase-js v2 para autenticacao. O jogo continua estatico; cadastro e login precisam de internet. Para testar os links de e-mail, use a URL publicada no GitHub Pages. Abrir `index.html` localmente continua permitindo jogar, mas redirecionamentos de autenticacao nao devem usar `file://`.
+
+## Conta
+
+O frontend usa apenas Project URL e publishable key em `js/supabase-config.js`. Nunca coloque secret key, service_role ou senhas neste diretorio. O cadastro envia o nickname para o trigger que cria `player_profiles`; o frontend apenas le esse perfil. Pontuacoes online e ranking nao fazem parte desta versao.
 
 ## Controles
 
