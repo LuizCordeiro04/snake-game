@@ -2,7 +2,6 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const scoreEl = document.getElementById("score");
-const arenaNumberEl = document.getElementById("arenaNumber");
 const bestScoreEl = document.getElementById("bestScore");
 const menuBestScoreEl = document.getElementById("menuBestScore");
 const finalScoreEl = document.getElementById("finalScore");
@@ -20,17 +19,13 @@ const menuPauseButton = document.getElementById("menuPauseButton");
 const playAgainButton = document.getElementById("playAgainButton");
 const menuGameOverButton = document.getElementById("menuGameOverButton");
 
-const arenaThresholds = [3, 35, 50, 70, 95, 125];
-const arenaGridSizes = [12, 14, 16, 18, 20, 22];
+const gridSize = 22;
 const highScoreKey = "snakeArenaHighScore";
 const swipeThreshold = 18;
 const maxQueuedDirections = 3;
 
-let arenaIndex = 0;
-let arenaTransition = null;
-let gridSize = arenaGridSizes[0];
-let cellSize = canvas.width / gridSize;
-let boardOffset = 0;
+const cellSize = canvas.width / gridSize;
+const boardOffset = 0;
 let snake;
 let food;
 let goldenFood;
@@ -109,7 +104,6 @@ function showScreen(screen) {
 
 function updateScores() {
   scoreEl.textContent = score;
-  arenaNumberEl.textContent = arenaIndex + 1;
   bestScoreEl.textContent = highScore;
   menuBestScoreEl.textContent = highScore;
   finalScoreEl.textContent = score;
@@ -152,20 +146,9 @@ function drawBoard() {
     ctx.stroke();
   }
 
-  const elapsed = arenaTransition ? gameTime - arenaTransition.start : 500;
-  const progress = Math.min(1, elapsed / 500);
-  const inset = arenaTransition ? arenaTransition.inset * (1 - progress) : 0;
-  if (inset > 0) {
-    ctx.fillStyle = `rgba(10, 15, 13, ${(1 - progress) * 0.8})`;
-    ctx.fillRect(0, 0, canvas.width, inset);
-    ctx.fillRect(0, canvas.height - inset, canvas.width, inset);
-    ctx.fillRect(0, inset, inset, canvas.height - inset * 2);
-    ctx.fillRect(canvas.width - inset, inset, inset, canvas.height - inset * 2);
-  }
-
   ctx.strokeStyle = "#3b5140";
   ctx.lineWidth = 2;
-  ctx.strokeRect(inset + 1, inset + 1, canvas.width - inset * 2 - 2, canvas.height - inset * 2 - 2);
+  ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
 }
 
 function drawFood(timestamp = 0) {
@@ -236,36 +219,12 @@ function drawSnake() {
   });
 }
 
-function drawArenaNotice() {
-  if (!arenaTransition) {
-    return;
-  }
-
-  const elapsed = gameTime - arenaTransition.start;
-  if (elapsed >= 1000) {
-    arenaTransition = null;
-    return;
-  }
-
-  const opacity = Math.min(1, elapsed / 150, (1000 - elapsed) / 300);
-  ctx.save();
-  ctx.fillStyle = `rgba(237, 246, 238, ${opacity * 0.9})`;
-  ctx.shadowColor = "#0a0f0d";
-  ctx.shadowBlur = 8;
-  ctx.font = "700 22px system-ui, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(`ARENA ${arenaIndex + 1}`, canvas.width / 2, canvas.height / 2);
-  ctx.restore();
-}
-
 function render(timestamp) {
   drawBoard();
   drawFood(timestamp);
   drawGoldenFood();
   drawSnake();
   drawGoldenFlash();
-  drawArenaNotice();
 }
 
 function isSamePosition(a, b) {
@@ -312,43 +271,11 @@ function updateGoldenFood() {
 function calculateStepDelay() {
   const earlyScore = Math.min(score, 250);
   const laterScore = Math.max(0, score - 250);
-  return Math.max(68, 150 - earlyScore * 0.18 - arenaIndex * 5 - laterScore * 0.03);
-}
-
-function expandArena() {
-  const previousSize = gridSize;
-  arenaIndex += 1;
-  gridSize = arenaGridSizes[arenaIndex];
-  cellSize = canvas.width / gridSize;
-  const shift = (gridSize - previousSize) / 2;
-
-  snake.forEach((part) => {
-    part.x += shift;
-    part.y += shift;
-  });
-  [food, goldenFood, goldenFlash].forEach((item) => {
-    if (item) {
-      item.x += shift;
-      item.y += shift;
-    }
-  });
-
-  arenaTransition = { start: gameTime, inset: shift * cellSize };
-  updateScores();
-}
-
-function updateArena() {
-  while (arenaIndex < arenaThresholds.length - 1 && snake.length >= arenaThresholds[arenaIndex + 1]) {
-    expandArena();
-  }
+  const lengthReduction = Math.min(25, Math.max(0, (snake.length - 3) * 25 / 122));
+  return Math.max(68, 150 - earlyScore * 0.18 - lengthReduction - laterScore * 0.03);
 }
 
 function resetGame() {
-  arenaIndex = 0;
-  arenaTransition = null;
-  gridSize = arenaGridSizes[0];
-  cellSize = canvas.width / gridSize;
-  boardOffset = 0;
   const center = Math.floor(gridSize / 2);
 
   snake = [
@@ -442,15 +369,14 @@ function step() {
 
   const head = snake[0];
   const nextHead = {
-    x: head.x + direction.x,
-    y: head.y + direction.y,
+    x: (head.x + direction.x + gridSize) % gridSize,
+    y: (head.y + direction.y + gridSize) % gridSize,
   };
 
-  const hitWall = nextHead.x < 0 || nextHead.x >= gridSize || nextHead.y < 0 || nextHead.y >= gridSize;
   const bodyToCheck = snake.slice(0, -1);
   const hitBody = bodyToCheck.some((part) => isSamePosition(part, nextHead));
 
-  if (hitWall || hitBody) {
+  if (hitBody) {
     endGame();
     return;
   }
@@ -460,7 +386,6 @@ function step() {
   if (food && isSamePosition(nextHead, food)) {
     score += 1;
     foodsEaten += 1;
-    updateArena();
     stepDelay = calculateStepDelay();
     playEatSound();
     if (foodsEaten % 10 === 0) {
@@ -473,7 +398,6 @@ function step() {
     foodsEaten += 1;
     goldenFlash = { ...goldenFood, until: gameTime + 350 };
     goldenFood = null;
-    updateArena();
     stepDelay = calculateStepDelay();
     scheduleGoldenFood();
     playGoldenSound();
