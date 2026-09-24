@@ -418,6 +418,7 @@ function endGame() {
 
   updateScores();
   showScreen(gameOverScreen);
+  window.dispatchEvent(new CustomEvent("snake:gameover", { detail: { score } }));
 }
 
 function canChangeDirection(newDirection, currentDirection = direction) {

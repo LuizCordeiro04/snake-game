@@ -198,6 +198,11 @@
 
   if (!client) return;
 
+  window.SNAKE_AUTH = Object.freeze({
+    getSession: () => client.auth.getSession(),
+    submitScore: (body) => client.functions.invoke("submit-score", { body }),
+  });
+
   if (callbackParams.has("error") || queryParams.has("error")) {
     showMessage(menuNotice, "O link de e-mail é inválido ou expirou. Solicite um novo link.", true);
   }
