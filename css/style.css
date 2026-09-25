@@ -522,18 +522,36 @@ button.auth-link {
   .shell {
     width: 100%;
     min-height: 100dvh;
+    grid-template-columns: minmax(0, 1fr);
     padding:
       calc(12px + env(safe-area-inset-top))
-      calc(12px + env(safe-area-inset-right))
+      calc(16px + env(safe-area-inset-right))
       calc(12px + env(safe-area-inset-bottom))
-      calc(12px + env(safe-area-inset-left));
+      calc(16px + env(safe-area-inset-left));
   }
 
   .game-card {
+    min-width: 0;
     padding: 12px;
   }
 
+  .scorebar {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-inline: 4px;
+  }
+
+  .scorebar div {
+    min-width: 0;
+  }
+
+  .scorebar strong {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
   .board-wrap {
+    min-width: 0;
     width: min(100%, max(120px, calc(100dvh - 172px - env(safe-area-inset-top) - env(safe-area-inset-bottom))));
     justify-self: center;
     padding: 7px;
@@ -570,17 +588,31 @@ button.auth-link {
   }
 
   .game-footer {
-    min-height: 38px;
+    min-height: 44px;
     justify-items: end;
   }
 
   .touch-pause-button {
-    display: grid;
-    width: 38px;
-    min-height: 38px;
-    place-items: center;
+    display: flex;
+    width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     padding: 0;
-    font-size: 1.2rem;
+    appearance: none;
+    background: var(--panel);
+    border-color: var(--edge);
+    border-radius: 8px;
     touch-action: manipulation;
+  }
+
+  .touch-pause-button::before,
+  .touch-pause-button::after {
+    content: "";
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--text);
   }
 }
