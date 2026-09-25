@@ -41,7 +41,7 @@
           </div>
           <div id="accountUser" class="account-row" hidden>
             <span id="playerNickname" class="account-name"></span>
-            <button id="logoutButton" type="button" class="secondary">SAIR</button>
+            <button id="openAccountButton" type="button" class="secondary">MINHA CONTA</button>
           </div>
           <p id="menuAuthNotice" class="auth-message" role="status" hidden></p>
         </div>
@@ -135,8 +135,49 @@
             </form>
           </div>
 
+          <div id="signupSuccessView" class="auth-view" hidden>
+            <h2>CONTA CRIADA!</h2>
+            <p class="account-copy">Enviamos um e-mail de confirmação para:</p>
+            <strong id="signupSuccessEmail" class="account-email"></strong>
+            <p class="account-copy">Confirme seu cadastro pelo link enviado para o seu e-mail. Depois disso, você poderá entrar na sua conta.</p>
+            <button id="signupSuccessOkButton" type="button">OK</button>
+          </div>
+
+          <div id="unconfirmedView" class="auth-view" hidden>
+            <h2>E-MAIL AINDA NÃO CONFIRMADO</h2>
+            <p class="account-copy">Confirme seu cadastro pelo link que enviamos para seu e-mail.</p>
+            <button id="unconfirmedOkButton" type="button">OK</button>
+          </div>
+
           <p id="authMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
           <button id="closeAuthButton" type="button" class="secondary">VOLTAR AO MENU</button>
+        </div>
+      </section>
+
+      <section id="accountScreen" class="overlay auth-overlay" aria-label="Minha conta">
+        <div class="panel auth-panel account-panel">
+          <div id="accountOverview" class="auth-view">
+            <h2>MINHA CONTA</h2>
+            <div class="account-detail"><span>NICKNAME</span><strong id="accountNickname">—</strong></div>
+            <div class="account-detail"><span>E-MAIL</span><strong id="accountEmail">—</strong></div>
+            <div class="account-detail"><span>RECORDE ONLINE</span><strong id="accountBestScore">—</strong></div>
+            <button id="changeNicknameButton" type="button">ALTERAR NICKNAME</button>
+            <button id="changeEmailButton" type="button" class="secondary">ALTERAR E-MAIL</button>
+            <button id="changePasswordButton" type="button" class="secondary">ALTERAR SENHA</button>
+            <button id="logoutButton" type="button" class="secondary">SAIR DA CONTA</button>
+            <button id="deleteAccountButton" type="button" class="secondary">EXCLUIR CONTA</button>
+          </div>
+          <div id="nicknameView" class="auth-view" hidden>
+            <h2>ALTERAR NICKNAME</h2>
+            <p class="account-copy">Atual: <strong id="currentNickname"></strong></p>
+            <form id="nicknameForm" class="auth-form">
+              <label>Novo nickname<input name="nickname" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" autocomplete="nickname" required /></label>
+              <button type="submit">SALVAR NICKNAME</button>
+            </form>
+            <button id="backToAccountButton" type="button" class="secondary">VOLTAR À MINHA CONTA</button>
+          </div>
+          <p id="accountMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
+          <button id="closeAccountButton" type="button" class="secondary">VOLTAR AO MENU</button>
         </div>
       </section>
     </main>
