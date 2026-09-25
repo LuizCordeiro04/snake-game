@@ -257,6 +257,137 @@ canvas {
   font-weight: 700;
 }
 
+.ranking-overlay {
+  z-index: 1;
+}
+
+.ranking-panel {
+  width: min(100%, 440px);
+  max-height: 100%;
+  min-height: 0;
+  gap: 14px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.ranking-panel h2 {
+  margin-bottom: 0;
+  font-size: 1.7rem;
+}
+
+.ranking-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 3px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: #101713;
+}
+
+.ranking-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ranking-tabs button[aria-selected="true"] {
+  background: var(--panel-soft);
+  color: var(--snake-head);
+}
+
+.ranking-content {
+  display: grid;
+  min-height: 0;
+  gap: 8px;
+}
+
+.ranking-heading,
+.ranking-list li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 4.5rem;
+  align-items: center;
+  gap: 8px;
+}
+
+.ranking-heading {
+  padding: 0 8px 7px;
+  border-bottom: 1px solid var(--edge);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ranking-heading span:last-child,
+.ranking-points {
+  text-align: right;
+}
+
+.ranking-list {
+  max-height: min(50vh, 390px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-color: var(--edge) transparent;
+}
+
+.ranking-list li {
+  min-height: 38px;
+  padding: 0 8px;
+  border-bottom: 1px solid rgba(145, 161, 151, 0.1);
+  font-size: 0.86rem;
+}
+
+.ranking-list li.is-self {
+  border-left: 2px solid var(--snake);
+  background: rgba(142, 227, 109, 0.08);
+}
+
+.ranking-position {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-list li.is-top-three .ranking-position {
+  color: var(--snake-head);
+  font-weight: 800;
+}
+
+.ranking-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-points {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-status {
+  display: grid;
+  min-height: 110px;
+  margin: 0;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.ranking-retry {
+  min-height: 38px;
+}
+
+.ranking-list[hidden],
+.ranking-status[hidden],
+.ranking-retry[hidden] {
+  display: none;
+}
+
 .auth-overlay {
   z-index: 2;
 }
