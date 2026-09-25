@@ -35,7 +35,20 @@
       row.classList.toggle("is-self", Boolean(isSelf));
       row.classList.toggle("is-top-three", entry.position <= 3);
       position.className = "ranking-position";
-      position.textContent = String(entry.position);
+      if (entry.position <= 3) {
+        position.dataset.place = String(entry.position);
+        position.setAttribute("role", "img");
+        position.setAttribute("aria-label", `${entry.position}º lugar`);
+        const trophy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        trophy.setAttribute("viewBox", "0 0 24 24");
+        trophy.setAttribute("aria-hidden", "true");
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        outline.setAttribute("d", "M6 3h12v4a6 6 0 0 1-12 0V3Zm0 2H3v2a4 4 0 0 0 4 4m11-6h3v2a4 4 0 0 1-4 4m-5 2v5m-4 2h8");
+        trophy.append(outline);
+        position.append(trophy);
+      } else {
+        position.textContent = String(entry.position);
+      }
       name.className = "ranking-name";
       name.textContent = entry.nickname;
       name.title = entry.nickname;
