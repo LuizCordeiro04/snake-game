@@ -341,8 +341,31 @@ canvas {
 }
 
 .ranking-list li.is-top-three .ranking-position {
-  color: var(--snake-head);
-  font-weight: 800;
+  display: flex;
+  align-items: center;
+}
+
+.ranking-position[data-place="1"] {
+  color: #e2c16c;
+}
+
+.ranking-position[data-place="2"] {
+  color: #b8c6c9;
+}
+
+.ranking-position[data-place="3"] {
+  color: #cb9877;
+}
+
+.ranking-position svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .ranking-name {
