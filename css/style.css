@@ -224,9 +224,8 @@ canvas {
 }
 
 .account-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  gap: 8px;
 }
 
 .account-row[hidden],
@@ -235,26 +234,16 @@ canvas {
   display: none;
 }
 
-.account-row button {
-  flex: 0 0 auto;
-}
-
-#accountGuest button {
+#accountUser button {
   width: 100%;
 }
 
-#accountUser button {
-  width: auto;
-  min-width: 72px;
-  min-height: 38px;
-}
-
 .account-name {
-  flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--text);
   font-weight: 700;
+  text-align: center;
 }
 
 .ranking-overlay {
@@ -404,6 +393,54 @@ canvas {
   margin-bottom: 2px;
   font-size: 1.6rem;
   line-height: 1.1;
+}
+
+.account-panel {
+  width: min(100%, 380px);
+}
+
+.account-panel h2 {
+  font-size: 1.6rem;
+}
+
+.account-detail {
+  display: grid;
+  gap: 3px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--edge);
+}
+
+.account-detail span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.account-detail strong,
+.account-email {
+  overflow-wrap: anywhere;
+  font-size: 0.98rem;
+}
+
+.account-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.account-copy strong {
+  color: var(--text);
+}
+
+.account-email {
+  text-align: center;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .auth-view,
