@@ -14,11 +14,23 @@
   const guestRow = document.getElementById("accountGuest");
   const userRow = document.getElementById("accountUser");
   const nicknameEl = document.getElementById("playerNickname");
+  const accountScreen = document.getElementById("accountScreen");
+  const accountMessage = document.getElementById("accountMessage");
+  const accountNickname = document.getElementById("accountNickname");
+  const accountEmail = document.getElementById("accountEmail");
+  const accountBestScore = document.getElementById("accountBestScore");
+  const currentNickname = document.getElementById("currentNickname");
+  const accountViews = {
+    overview: document.getElementById("accountOverview"),
+    nickname: document.getElementById("nicknameView"),
+  };
   const views = {
     login: document.getElementById("loginView"),
     signup: document.getElementById("signupView"),
     recovery: document.getElementById("recoveryView"),
     reset: document.getElementById("resetView"),
+    signupSuccess: document.getElementById("signupSuccessView"),
+    unconfirmed: document.getElementById("unconfirmedView"),
   };
   let currentView = "login";
   let profileRequest = 0;
@@ -34,13 +46,30 @@
     currentView = name;
     Object.entries(views).forEach(([key, view]) => { view.hidden = key !== name; });
     showMessage(authMessage, "");
+    document.getElementById("closeAuthButton").hidden = name === "signupSuccess" || name === "unconfirmed";
     authScreen.classList.add("is-visible");
-    views[name].querySelector("input")?.focus();
+    (views[name].querySelector("input") || views[name].querySelector("button"))?.focus();
   }
 
   function closeAuth() {
     authScreen.classList.remove("is-visible");
     showMessage(authMessage, "");
+  }
+
+  function showAccountView(name) {
+    Object.entries(accountViews).forEach(([key, view]) => { view.hidden = key !== name; });
+    showMessage(accountMessage, "");
+    if (name === "nickname") {
+      currentNickname.textContent = accountNickname.textContent;
+      document.querySelector('#nicknameForm input[name="nickname"]').value = "";
+      document.querySelector('#nicknameForm input[name="nickname"]').focus();
+    }
+  }
+
+  function closeAccount() {
+    accountScreen.classList.remove("is-visible");
+    showAccountView("overview");
+    document.getElementById("openAccountButton").focus();
   }
 
   function friendlyError(error, action) {
@@ -82,19 +111,27 @@
       guestRow.hidden = false;
       userRow.hidden = true;
       nicknameEl.textContent = "";
-      return;
+      accountScreen.classList.remove("is-visible");
+      accountNickname.textContent = "—";
+      accountEmail.textContent = "—";
+      accountBestScore.textContent = "—";
+      return false;
     }
     guestRow.hidden = true;
     userRow.hidden = false;
     nicknameEl.textContent = "Conta conectada";
+    accountEmail.textContent = session.user.email || "—";
     const { data, error } = await client.from("player_profiles")
-      .select("nickname").eq("id", session.user.id).maybeSingle();
+      .select("nickname,best_score").eq("id", session.user.id).maybeSingle();
     if (request !== profileRequest) return;
     if (error || !data?.nickname) {
       showMessage(menuNotice, "Conta conectada, mas não foi possível carregar o perfil.", true);
-      return;
+      return false;
     }
     nicknameEl.textContent = data.nickname;
+    accountNickname.textContent = data.nickname;
+    accountBestScore.textContent = String(data.best_score);
+    return true;
   }
 
   document.getElementById("openLoginButton").addEventListener("click", () => {
@@ -109,10 +146,20 @@
   document.getElementById("signupToLoginButton").addEventListener("click", () => showView("login"));
   document.getElementById("recoveryToLoginButton").addEventListener("click", () => showView("login"));
   document.getElementById("closeAuthButton").addEventListener("click", closeAuth);
+  document.getElementById("signupSuccessOkButton").addEventListener("click", () => {
+    document.querySelectorAll('#signupForm input[type="password"]').forEach((input) => { input.value = ""; });
+    closeAuth();
+    document.getElementById("openLoginButton").focus();
+  });
+  document.getElementById("unconfirmedOkButton").addEventListener("click", () => {
+    document.querySelector('#loginForm input[name="password"]').value = "";
+    closeAuth();
+    document.getElementById("openLoginButton").focus();
+  });
 
   authScreen.addEventListener("keydown", (event) => {
     event.stopPropagation();
-    if (event.key === "Escape" && currentView !== "reset") closeAuth();
+    if (event.key === "Escape" && !["reset", "signupSuccess", "unconfirmed"].includes(currentView)) closeAuth();
   });
 
   document.getElementById("signupForm").addEventListener("submit", (event) => {
@@ -137,10 +184,13 @@
         email, password, options: { data: { nickname }, emailRedirectTo: redirectUrl },
       });
       if (error) throw error;
-      closeAuth();
-      showMessage(menuNotice, data.session
-        ? "Conta criada. Você já pode jogar."
-        : "Confira seu e-mail para confirmar a conta antes de entrar.");
+      if (data.session) {
+        closeAuth();
+        showMessage(menuNotice, "Conta criada. Você já pode jogar.");
+      } else {
+        document.getElementById("signupSuccessEmail").textContent = email;
+        showView("signupSuccess");
+      }
     });
   });
 
@@ -151,6 +201,10 @@
         email: String(values.get("email")).trim(),
         password: String(values.get("password")),
       });
+      if (error?.code === "email_not_confirmed") {
+        showView("unconfirmed");
+        return;
+      }
       if (error) throw error;
       closeAuth();
       showMessage(menuNotice, "Login realizado.");
@@ -190,10 +244,84 @@
     });
   });
 
+  document.getElementById("openAccountButton").addEventListener("click", async () => {
+    if (!client) return;
+    showAccountView("overview");
+    accountScreen.classList.add("is-visible");
+    document.getElementById("changeNicknameButton").focus();
+    try {
+      const { data, error } = await client.auth.getUser();
+      if (error || !data.user) throw error || new Error("Missing user");
+      if (!await syncAccount({ user: data.user })) {
+        showMessage(accountMessage, "Não foi possível atualizar os dados da conta. Tente novamente.", true);
+      }
+    } catch {
+      showMessage(accountMessage, "Não foi possível atualizar os dados da conta. Tente novamente.", true);
+    }
+  });
+  document.getElementById("closeAccountButton").addEventListener("click", closeAccount);
+  document.getElementById("backToAccountButton").addEventListener("click", () => {
+    showAccountView("overview");
+    document.getElementById("changeNicknameButton").focus();
+  });
+  document.getElementById("changeNicknameButton").addEventListener("click", () => showAccountView("nickname"));
+  for (const id of ["changeEmailButton", "changePasswordButton", "deleteAccountButton"]) {
+    document.getElementById(id).addEventListener("click", () => {
+      showMessage(accountMessage, "Função ainda não disponível nesta versão de desenvolvimento.");
+    });
+  }
+  accountScreen.addEventListener("keydown", (event) => {
+    event.stopPropagation();
+    if (event.key === "Escape") closeAccount();
+  });
+  document.getElementById("nicknameForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    const nickname = String(new FormData(form).get("nickname")).trim();
+    showMessage(accountMessage, "");
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(nickname)) {
+      showMessage(accountMessage, "Nickname: 3 a 20 letras, números ou _.", true);
+      return;
+    }
+    button.disabled = true;
+    try {
+      const { data: authData, error: authError } = await client.auth.getUser();
+      if (authError || !authData.user) throw authError || new Error("Missing user");
+      const { data, error } = await client.from("player_profiles")
+        .update({ nickname }).eq("id", authData.user.id).select("nickname").single();
+      if (error) {
+        if (error.code === "23505") {
+          showMessage(accountMessage, "Este nickname já está em uso.", true);
+          return;
+        }
+        if (error.code === "23514") {
+          showMessage(accountMessage, "Nickname: 3 a 20 letras, números ou _.", true);
+          return;
+        }
+        throw error;
+      }
+      ++profileRequest;
+      nicknameEl.textContent = data.nickname;
+      accountNickname.textContent = data.nickname;
+      currentNickname.textContent = data.nickname;
+      window.dispatchEvent(new Event("snake:nickname-updated"));
+      showAccountView("overview");
+      showMessage(accountMessage, "Nickname atualizado.");
+    } catch {
+      showMessage(accountMessage, "Não foi possível salvar. Verifique sua conexão e tente novamente.", true);
+    } finally {
+      button.disabled = false;
+    }
+  });
   document.getElementById("logoutButton").addEventListener("click", async () => {
     const { error } = await client.auth.signOut({ scope: "local" });
-    if (error) showMessage(menuNotice, friendlyError(error, "logout"), true);
-    else showMessage(menuNotice, "Você saiu da conta.");
+    if (error) showMessage(accountMessage, friendlyError(error, "logout"), true);
+    else {
+      closeAccount();
+      document.getElementById("playButton").focus();
+      showMessage(menuNotice, "Você saiu da conta.");
+    }
   });
 
   if (!client) return;

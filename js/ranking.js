@@ -161,6 +161,9 @@
   }
 
   document.getElementById("openRankingButton").addEventListener("click", openRanking);
+  window.addEventListener("snake:nickname-updated", () => {
+    if (isOpen()) load(scope);
+  });
   document.getElementById("closeRankingButton").addEventListener("click", closeRanking);
   retryButton.addEventListener("click", () => load(scope));
   Object.entries(tabs).forEach(([name, tab]) => {
