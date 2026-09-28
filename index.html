@@ -176,6 +176,56 @@
             </form>
             <button id="backToAccountButton" type="button" class="secondary">VOLTAR À MINHA CONTA</button>
           </div>
+          <div id="emailView" class="auth-view" hidden>
+            <h2>ALTERAR E-MAIL</h2>
+            <p class="account-copy">E-mail atual:</p>
+            <strong id="currentAccountEmail" class="account-email"></strong>
+            <form id="emailForm" class="auth-form">
+              <label>NOVO E-MAIL<input name="email" type="email" autocomplete="email" required /></label>
+              <button type="submit">ALTERAR E-MAIL</button>
+            </form>
+            <button id="cancelEmailButton" type="button" class="secondary">CANCELAR</button>
+          </div>
+          <div id="emailPendingView" class="auth-view" hidden>
+            <h2>CONFIRME A ALTERAÇÃO</h2>
+            <p class="account-copy">Enviamos mensagens de confirmação para o seu e-mail atual e para o novo endereço. Confirme a alteração pelos e-mails enviados para concluir a troca.</p>
+            <strong id="pendingAccountEmail" class="account-email"></strong>
+            <button id="emailPendingOkButton" type="button">OK</button>
+          </div>
+          <div id="passwordView" class="auth-view" hidden>
+            <h2>ALTERAR SENHA</h2>
+            <form id="accountPasswordForm" class="auth-form">
+              <label>SENHA ATUAL<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+              <label>NOVA SENHA<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <div class="password-rules">
+                <span>A senha deve conter:</span>
+                <ul>
+                  <li>8 caracteres ou mais</li>
+                  <li>1 letra maiúscula</li>
+                  <li>1 letra minúscula</li>
+                  <li>1 número</li>
+                </ul>
+              </div>
+              <label>CONFIRMAR NOVA SENHA<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <button type="submit">ALTERAR SENHA</button>
+            </form>
+            <button id="cancelPasswordButton" type="button" class="secondary">CANCELAR</button>
+          </div>
+          <div id="passwordReauthView" class="auth-view" hidden>
+            <h2>CONFIRME SUA IDENTIDADE</h2>
+            <p class="account-copy">Enviamos um código de segurança para o e-mail da sua conta. Informe o código para continuar a alteração da senha.</p>
+            <form id="passwordReauthForm" class="auth-form">
+              <label>CÓDIGO<input name="nonce" type="text" inputmode="numeric" autocomplete="one-time-code" required /></label>
+              <button type="submit">CONFIRMAR CÓDIGO</button>
+            </form>
+            <button id="resendReauthButton" type="button" class="secondary">REENVIAR CÓDIGO</button>
+            <button id="cancelReauthButton" type="button" class="secondary">CANCELAR</button>
+          </div>
+          <div id="passwordSuccessView" class="auth-view" hidden>
+            <h2>SENHA ALTERADA</h2>
+            <p class="account-copy">Sua senha foi atualizada com sucesso.</p>
+            <button id="passwordSuccessOkButton" type="button">OK</button>
+          </div>
           <p id="accountMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
           <button id="closeAccountButton" type="button" class="secondary">VOLTAR AO MENU</button>
         </div>
@@ -183,7 +233,7 @@
     </main>
 
     <script src="js/game.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/auth.js"></script>
     <script defer src="js/online.js"></script>

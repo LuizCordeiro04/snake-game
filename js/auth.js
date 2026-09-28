@@ -20,9 +20,17 @@
   const accountEmail = document.getElementById("accountEmail");
   const accountBestScore = document.getElementById("accountBestScore");
   const currentNickname = document.getElementById("currentNickname");
+  const currentAccountEmail = document.getElementById("currentAccountEmail");
+  const accountPasswordForm = document.getElementById("accountPasswordForm");
+  const passwordReauthForm = document.getElementById("passwordReauthForm");
   const accountViews = {
     overview: document.getElementById("accountOverview"),
     nickname: document.getElementById("nicknameView"),
+    email: document.getElementById("emailView"),
+    emailPending: document.getElementById("emailPendingView"),
+    password: document.getElementById("passwordView"),
+    passwordReauth: document.getElementById("passwordReauthView"),
+    passwordSuccess: document.getElementById("passwordSuccessView"),
   };
   const views = {
     login: document.getElementById("loginView"),
@@ -35,6 +43,7 @@
   let currentView = "login";
   let profileRequest = 0;
   let recoveryIntent = callbackType === "recovery";
+  let accountFlow = 0;
 
   function showMessage(element, message, isError = false) {
     element.textContent = message;
@@ -64,11 +73,27 @@
       document.querySelector('#nicknameForm input[name="nickname"]').value = "";
       document.querySelector('#nicknameForm input[name="nickname"]').focus();
     }
+    if (name === "email") {
+      currentAccountEmail.textContent = accountEmail.textContent;
+      document.querySelector('#emailForm input[name="email"]').value = "";
+    }
+    (accountViews[name].querySelector("input") || accountViews[name].querySelector("button"))?.focus();
+  }
+
+  function clearAccountPasswords() {
+    accountPasswordForm.reset();
+    passwordReauthForm.reset();
+  }
+
+  function returnToAccount() {
+    ++accountFlow;
+    clearAccountPasswords();
+    showAccountView("overview");
   }
 
   function closeAccount() {
     accountScreen.classList.remove("is-visible");
-    showAccountView("overview");
+    returnToAccount();
     document.getElementById("openAccountButton").focus();
   }
 
@@ -92,6 +117,26 @@
     return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
   }
 
+  function accountAuthError(error, kind) {
+    const code = error?.code;
+    if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || code?.includes("rate_limit")) {
+      return "Muitas tentativas. Aguarde um pouco e tente novamente.";
+    }
+    if (kind === "email") {
+      if (code === "email_address_invalid" || code === "validation_failed") return "Confira o novo e-mail e tente novamente.";
+      if (code === "email_exists" || code === "user_already_exists") return "Não foi possível solicitar a troca para este endereço. Confira o e-mail ou tente outro.";
+      if (code === "email_address_not_authorized") return "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.";
+    }
+    if (kind === "password") {
+      if (code === "current_password_invalid" || code === "invalid_credentials") return "Senha atual incorreta.";
+      if (code === "current_password_required") return "Informe sua senha atual.";
+      if (code === "same_password") return "Escolha uma senha diferente da atual.";
+      if (code === "weak_password") return "Use ao menos 8 caracteres, com maiúscula, minúscula e número.";
+      if (code === "reauthentication_not_valid" || code === "otp_expired" || code === "otp_disabled") return "Código inválido ou expirado. Confira o e-mail ou solicite outro código.";
+    }
+    return "Não foi possível concluir a operação. Verifique sua conexão e tente novamente.";
+  }
+
   async function submit(form, action) {
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
@@ -108,10 +153,12 @@
   async function syncAccount(session) {
     const request = ++profileRequest;
     if (!session?.user) {
+      ++accountFlow;
       guestRow.hidden = false;
       userRow.hidden = true;
       nicknameEl.textContent = "";
       accountScreen.classList.remove("is-visible");
+      clearAccountPasswords();
       accountNickname.textContent = "—";
       accountEmail.textContent = "—";
       accountBestScore.textContent = "—";
@@ -121,6 +168,7 @@
     userRow.hidden = false;
     nicknameEl.textContent = "Conta conectada";
     accountEmail.textContent = session.user.email || "—";
+    currentAccountEmail.textContent = accountEmail.textContent;
     const { data, error } = await client.from("player_profiles")
       .select("nickname,best_score").eq("id", session.user.id).maybeSingle();
     if (request !== profileRequest) return;
@@ -246,7 +294,7 @@
 
   document.getElementById("openAccountButton").addEventListener("click", async () => {
     if (!client) return;
-    showAccountView("overview");
+    returnToAccount();
     accountScreen.classList.add("is-visible");
     document.getElementById("changeNicknameButton").focus();
     try {
@@ -261,18 +309,136 @@
   });
   document.getElementById("closeAccountButton").addEventListener("click", closeAccount);
   document.getElementById("backToAccountButton").addEventListener("click", () => {
-    showAccountView("overview");
+    returnToAccount();
     document.getElementById("changeNicknameButton").focus();
   });
   document.getElementById("changeNicknameButton").addEventListener("click", () => showAccountView("nickname"));
-  for (const id of ["changeEmailButton", "changePasswordButton", "deleteAccountButton"]) {
-    document.getElementById(id).addEventListener("click", () => {
-      showMessage(accountMessage, "Função ainda não disponível nesta versão de desenvolvimento.");
-    });
+  document.getElementById("changeEmailButton").addEventListener("click", () => showAccountView("email"));
+  document.getElementById("changePasswordButton").addEventListener("click", () => {
+    clearAccountPasswords();
+    showAccountView("password");
+  });
+  document.getElementById("deleteAccountButton").addEventListener("click", () => {
+    showMessage(accountMessage, "Função ainda não disponível nesta versão de desenvolvimento.");
+  });
+  for (const id of ["cancelEmailButton", "emailPendingOkButton", "cancelPasswordButton", "cancelReauthButton", "passwordSuccessOkButton"]) {
+    document.getElementById(id).addEventListener("click", returnToAccount);
   }
   accountScreen.addEventListener("keydown", (event) => {
     event.stopPropagation();
     if (event.key === "Escape") closeAccount();
+  });
+  document.getElementById("emailForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    const email = String(new FormData(form).get("email")).trim();
+    showMessage(accountMessage, "");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showMessage(accountMessage, "Informe um e-mail válido.", true);
+      return;
+    }
+    button.disabled = true;
+    const flow = ++accountFlow;
+    try {
+      const { data, error: userError } = await client.auth.getUser();
+      if (userError || !data.user) throw userError || new Error("Missing user");
+      if (email.toLowerCase() === data.user.email?.toLowerCase()) {
+        showMessage(accountMessage, "Este já é o e-mail da sua conta.", true);
+        return;
+      }
+      const { error } = await client.auth.updateUser({ email }, { emailRedirectTo: redirectUrl });
+      if (error) throw error;
+      if (flow !== accountFlow) return;
+      document.getElementById("pendingAccountEmail").textContent = email;
+      form.reset();
+      showAccountView("emailPending");
+    } catch (error) {
+      if (flow === accountFlow) showMessage(accountMessage, accountAuthError(error, "email"), true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+  accountPasswordForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = accountPasswordForm.querySelector('button[type="submit"]');
+    const values = new FormData(accountPasswordForm);
+    const currentPassword = String(values.get("currentPassword"));
+    const password = String(values.get("password"));
+    showMessage(accountMessage, "");
+    if (!currentPassword || !password || !values.get("confirmPassword")) {
+      showMessage(accountMessage, "Preencha todos os campos de senha.", true);
+      return;
+    }
+    if (!validPassword(password)) {
+      showMessage(accountMessage, "Use ao menos 8 caracteres, com maiúscula, minúscula e número.", true);
+      return;
+    }
+    if (password !== values.get("confirmPassword")) {
+      showMessage(accountMessage, "As senhas não coincidem.", true);
+      return;
+    }
+    button.disabled = true;
+    const flow = ++accountFlow;
+    try {
+      const { error } = await client.auth.updateUser({ password, current_password: currentPassword });
+      if (error?.code === "reauthentication_needed") {
+        const { error: reauthError } = await client.auth.reauthenticate();
+        if (reauthError) throw reauthError;
+        if (flow === accountFlow) showAccountView("passwordReauth");
+        return;
+      }
+      if (error) throw error;
+      if (flow !== accountFlow) return;
+      clearAccountPasswords();
+      showAccountView("passwordSuccess");
+    } catch (error) {
+      if (flow === accountFlow) showMessage(accountMessage, accountAuthError(error, "password"), true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+  passwordReauthForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = passwordReauthForm.querySelector('button[type="submit"]');
+    const nonce = String(new FormData(passwordReauthForm).get("nonce")).trim();
+    showMessage(accountMessage, "");
+    if (!nonce) {
+      showMessage(accountMessage, "Informe o código recebido por e-mail.", true);
+      return;
+    }
+    button.disabled = true;
+    const flow = ++accountFlow;
+    try {
+      const values = new FormData(accountPasswordForm);
+      const { error } = await client.auth.updateUser({
+        password: String(values.get("password")),
+        current_password: String(values.get("currentPassword")),
+        nonce,
+      });
+      if (error) throw error;
+      if (flow !== accountFlow) return;
+      clearAccountPasswords();
+      showAccountView("passwordSuccess");
+    } catch (error) {
+      if (flow === accountFlow) showMessage(accountMessage, accountAuthError(error, "password"), true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+  document.getElementById("resendReauthButton").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    const flow = accountFlow;
+    try {
+      const { error } = await client.auth.reauthenticate();
+      if (error) throw error;
+      if (flow === accountFlow) showMessage(accountMessage, "Enviamos um novo código para o e-mail da conta.");
+    } catch (error) {
+      if (flow === accountFlow) showMessage(accountMessage, accountAuthError(error, "password"), true);
+    } finally {
+      button.disabled = false;
+    }
   });
   document.getElementById("nicknameForm").addEventListener("submit", async (event) => {
     event.preventDefault();
