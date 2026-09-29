@@ -23,6 +23,7 @@ const gridSize = 22;
 const highScoreKey = "snakeArenaHighScore";
 const swipeThreshold = 18;
 const maxQueuedDirections = 3;
+const GAME_OVER_DELAY_MS = 2000;
 const speed = {
   initialDelay: 160,
   scoreBreakpoint: 250,
@@ -53,6 +54,7 @@ let state = "menu";
 let lastStepAt = 0;
 let stepDelay = speed.initialDelay;
 let animationFrameId = 0;
+let gameOverTimerId = 0;
 let audioContext;
 
 function playTone(frequency, duration, delay = 0, type = "sine", volume = 0.055) {
@@ -229,7 +231,7 @@ function drawEatFlash() {
 }
 
 function drawSnake() {
-  const isDead = state === "gameover";
+  const isDead = state === "dying" || state === "gameover";
 
   snake.forEach((part, index) => {
     if (index === 0) {
@@ -315,6 +317,11 @@ function calculateStepDelay() {
 }
 
 function resetGame() {
+  if (gameOverTimerId) {
+    clearTimeout(gameOverTimerId);
+    gameOverTimerId = 0;
+  }
+
   const center = Math.floor(gridSize / 2);
 
   snake = [
@@ -339,6 +346,10 @@ function resetGame() {
 }
 
 function startGame() {
+  if (state === "dying") {
+    return;
+  }
+
   enableAudio();
   resetGame();
   state = "playing";
@@ -373,7 +384,11 @@ function returnToMenu() {
 }
 
 function endGame() {
-  state = "gameover";
+  if (state !== "playing") {
+    return;
+  }
+
+  state = "dying";
   goldenFood = null;
   playDeathSound();
 
@@ -383,8 +398,16 @@ function endGame() {
   }
 
   updateScores();
-  showScreen(gameOverScreen);
+  showScreen(null);
   window.dispatchEvent(new CustomEvent("snake:gameover", { detail: { score } }));
+  gameOverTimerId = setTimeout(() => {
+    gameOverTimerId = 0;
+    if (state !== "dying") {
+      return;
+    }
+    state = "gameover";
+    showScreen(gameOverScreen);
+  }, GAME_OVER_DELAY_MS);
 }
 
 function canChangeDirection(newDirection, currentDirection = direction) {
@@ -404,6 +427,10 @@ function queueDirection(newDirection) {
 }
 
 function step() {
+  if (state !== "playing") {
+    return;
+  }
+
   direction = directionQueue.shift() || direction;
 
   const head = snake[0];
