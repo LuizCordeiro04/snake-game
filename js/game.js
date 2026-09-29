@@ -23,6 +23,15 @@ const gridSize = 22;
 const highScoreKey = "snakeArenaHighScore";
 const swipeThreshold = 18;
 const maxQueuedDirections = 3;
+const speed = {
+  initialDelay: 160,
+  scoreBreakpoint: 250,
+  earlyReductionPerPoint: 0.22,
+  lateReductionPerPoint: 0.05,
+  lengthReductionAt: 125,
+  maxLengthReduction: 25,
+  minimumDelay: 68,
+};
 
 const cellSize = canvas.width / gridSize;
 const boardOffset = 0;
@@ -31,7 +40,7 @@ let food;
 let goldenFood;
 let goldenSpawnsAt = 0;
 let goldenExpiresAt = 0;
-let goldenFlash;
+let eatFlash;
 let gameTime = 0;
 let lastFrameAt = 0;
 let foodsEaten = 0;
@@ -42,7 +51,7 @@ let score;
 let highScore = Number(localStorage.getItem(highScoreKey)) || 0;
 let state = "menu";
 let lastStepAt = 0;
-let stepDelay = 150;
+let stepDelay = speed.initialDelay;
 let animationFrameId = 0;
 let audioContext;
 
@@ -161,10 +170,14 @@ function drawFood(timestamp = 0) {
   const centerY = boardOffset + food.y * cellSize + cellSize / 2;
   const radius = cellSize * 0.34 + pulse;
 
-  ctx.fillStyle = "#ff5964";
+  ctx.save();
+  ctx.shadowColor = "#ff4058";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#ff4058";
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
   ctx.beginPath();
@@ -185,37 +198,52 @@ function drawGoldenFood() {
 
   ctx.save();
   ctx.globalAlpha = blink;
-  ctx.shadowColor = "#ffd663";
-  ctx.shadowBlur = 10 + pulse * 2;
-  ctx.fillStyle = "#ffca45";
+  ctx.shadowColor = "#ffd64b";
+  ctx.shadowBlur = 14 + pulse * 2;
+  ctx.fillStyle = "#ffd63f";
   ctx.beginPath();
   ctx.arc(centerX, centerY, cellSize * 0.32 + pulse, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
 
-function drawGoldenFlash() {
-  if (!goldenFlash || gameTime >= goldenFlash.until) {
+function drawEatFlash() {
+  if (!eatFlash || gameTime >= eatFlash.until) {
     return;
   }
 
-  const progress = (goldenFlash.until - gameTime) / 350;
-  const centerX = boardOffset + goldenFlash.x * cellSize + cellSize / 2;
-  const centerY = boardOffset + goldenFlash.y * cellSize + cellSize / 2;
+  const progress = (eatFlash.until - gameTime) / eatFlash.duration;
+  const centerX = boardOffset + eatFlash.x * cellSize + cellSize / 2;
+  const centerY = boardOffset + eatFlash.y * cellSize + cellSize / 2;
   ctx.save();
-  ctx.strokeStyle = `rgba(255, 213, 94, ${progress * 0.8})`;
+  ctx.strokeStyle = eatFlash.golden
+    ? `rgba(255, 214, 75, ${progress * 0.8})`
+    : `rgba(255, 64, 88, ${progress * 0.6})`;
   ctx.lineWidth = 2;
-  ctx.shadowColor = "#ffca45";
-  ctx.shadowBlur = 15;
+  ctx.shadowColor = eatFlash.golden ? "#ffd63f" : "#ff4058";
+  ctx.shadowBlur = eatFlash.golden ? 15 : 8;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, cellSize * (0.4 + (1 - progress) * 0.5), 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, cellSize * (0.4 + (1 - progress) * (eatFlash.golden ? 0.5 : 0.3)), 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
 
 function drawSnake() {
   snake.forEach((part, index) => {
-    drawRoundedCell(part.x, part.y, index === 0 ? "#c7ff89" : "#8ee36d", index === 0 ? 1.5 : 2.5);
+    if (index === 0) {
+      ctx.save();
+      ctx.shadowColor = "#aaff76";
+      ctx.shadowBlur = 8;
+      drawRoundedCell(part.x, part.y, "#c7ff89", 1.5);
+      ctx.restore();
+      return;
+    }
+
+    const fade = snake.length > 2 ? (index - 1) / (snake.length - 2) : 0;
+    const red = Math.round(142 - fade * 67);
+    const green = Math.round(227 - fade * 61);
+    const blue = Math.round(109 - fade * 19);
+    drawRoundedCell(part.x, part.y, `rgb(${red}, ${green}, ${blue})`, 2.5);
   });
 }
 
@@ -224,7 +252,7 @@ function render(timestamp) {
   drawFood(timestamp);
   drawGoldenFood();
   drawSnake();
-  drawGoldenFlash();
+  drawEatFlash();
 }
 
 function isSamePosition(a, b) {
@@ -269,10 +297,13 @@ function updateGoldenFood() {
 }
 
 function calculateStepDelay() {
-  const earlyScore = Math.min(score, 250);
-  const laterScore = Math.max(0, score - 250);
-  const lengthReduction = Math.min(25, Math.max(0, (snake.length - 3) * 25 / 122));
-  return Math.max(68, 150 - earlyScore * 0.18 - lengthReduction - laterScore * 0.03);
+  const earlyScore = Math.min(score, speed.scoreBreakpoint);
+  const laterScore = Math.max(0, score - speed.scoreBreakpoint);
+  const lengthReduction = Math.min(speed.maxLengthReduction,
+    Math.max(0, (snake.length - 3) * speed.maxLengthReduction / (speed.lengthReductionAt - 3)));
+  return Math.max(speed.minimumDelay,
+    speed.initialDelay - earlyScore * speed.earlyReductionPerPoint
+      - lengthReduction - laterScore * speed.lateReductionPerPoint);
 }
 
 function resetGame() {
@@ -288,10 +319,10 @@ function resetGame() {
   touchGesture = null;
   score = 0;
   foodsEaten = 0;
-  stepDelay = 150;
+  stepDelay = speed.initialDelay;
   food = randomFood();
   goldenFood = null;
-  goldenFlash = null;
+  eatFlash = null;
   gameTime = 0;
   lastFrameAt = 0;
   scheduleGoldenFood();
@@ -384,6 +415,7 @@ function step() {
   snake.unshift(nextHead);
 
   if (food && isSamePosition(nextHead, food)) {
+    eatFlash = { ...food, duration: 220, until: gameTime + 220, golden: false };
     score += 1;
     foodsEaten += 1;
     stepDelay = calculateStepDelay();
@@ -396,7 +428,7 @@ function step() {
   } else if (goldenFood && isSamePosition(nextHead, goldenFood)) {
     score += 3;
     foodsEaten += 1;
-    goldenFlash = { ...goldenFood, until: gameTime + 350 };
+    eatFlash = { ...goldenFood, duration: 350, until: gameTime + 350, golden: true };
     goldenFood = null;
     stepDelay = calculateStepDelay();
     scheduleGoldenFood();
