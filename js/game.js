@@ -23,7 +23,7 @@ const gridSize = 22;
 const highScoreKey = "snakeArenaHighScore";
 const swipeThreshold = 18;
 const maxQueuedDirections = 3;
-const GAME_OVER_DELAY_MS = 2000;
+const GAME_OVER_DELAY_MS = 1000;
 const speed = {
   initialDelay: 160,
   scoreBreakpoint: 250,
