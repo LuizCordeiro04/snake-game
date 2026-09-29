@@ -45,6 +45,43 @@
   let recoveryIntent = callbackType === "recovery";
   let accountFlow = 0;
 
+  function hidePasswordFields(scope) {
+    scope.querySelectorAll(".password-field").forEach((field) => {
+      field.querySelector("input").type = "password";
+      const button = field.querySelector(".password-toggle");
+      button.setAttribute("aria-label", "Mostrar senha");
+      button.setAttribute("aria-pressed", "false");
+      button.classList.remove("is-visible");
+    });
+  }
+
+  for (const input of document.querySelectorAll('#authScreen input[type="password"], #accountScreen input[type="password"]')) {
+    const label = input.closest("label");
+    const field = document.createElement("div");
+    field.className = "password-field";
+    label.parentNode.insertBefore(field, label);
+    field.appendChild(label);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "password-toggle";
+    button.setAttribute("aria-label", "Mostrar senha");
+    button.setAttribute("aria-pressed", "false");
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-5.5 10-5.5S22 12 22 12s-3.5 5.5-10 5.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/><path class="password-eye-slash" d="M4 20 20 4"/></svg>';
+    field.appendChild(button);
+    button.addEventListener("click", () => {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const visible = input.type === "password";
+      input.type = visible ? "text" : "password";
+      button.classList.toggle("is-visible", visible);
+      button.setAttribute("aria-label", visible ? "Ocultar senha" : "Mostrar senha");
+      button.setAttribute("aria-pressed", String(visible));
+      input.focus({ preventScroll: true });
+      if (start !== null && end !== null) input.setSelectionRange(start, end);
+    });
+  }
+
   function showMessage(element, message, isError = false) {
     element.textContent = message;
     element.hidden = !message;
@@ -52,6 +89,7 @@
   }
 
   function showView(name) {
+    hidePasswordFields(authScreen);
     currentView = name;
     Object.entries(views).forEach(([key, view]) => { view.hidden = key !== name; });
     showMessage(authMessage, "");
@@ -61,6 +99,7 @@
   }
 
   function closeAuth() {
+    hidePasswordFields(authScreen);
     authScreen.classList.remove("is-visible");
     showMessage(authMessage, "");
   }
@@ -83,6 +122,7 @@
   function clearAccountPasswords() {
     accountPasswordForm.reset();
     passwordReauthForm.reset();
+    hidePasswordFields(accountScreen);
   }
 
   function returnToAccount() {
@@ -195,7 +235,7 @@
   document.getElementById("recoveryToLoginButton").addEventListener("click", () => showView("login"));
   document.getElementById("closeAuthButton").addEventListener("click", closeAuth);
   document.getElementById("signupSuccessOkButton").addEventListener("click", () => {
-    document.querySelectorAll('#signupForm input[type="password"]').forEach((input) => { input.value = ""; });
+    document.querySelectorAll('#signupForm input[name="password"], #signupForm input[name="confirmPassword"]').forEach((input) => { input.value = ""; });
     closeAuth();
     document.getElementById("openLoginButton").focus();
   });

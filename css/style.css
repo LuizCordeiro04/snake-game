@@ -496,6 +496,48 @@ button:disabled {
   outline-offset: 2px;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field > label input {
+  padding-right: 52px;
+}
+
+button.password-toggle {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 44px;
+  min-height: 40px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  transform: none;
+}
+
+button.password-toggle:hover,
+button.password-toggle:focus-visible {
+  background: var(--panel-soft);
+  color: var(--snake);
+  transform: none;
+}
+
+.password-toggle svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.password-eye-slash {
+  display: none;
+}
+
+.password-toggle.is-visible .password-eye-slash {
+  display: initial;
+}
+
 .password-rules {
   color: var(--muted);
   font-size: 0.74rem;
