@@ -229,17 +229,25 @@ function drawEatFlash() {
 }
 
 function drawSnake() {
+  const isDead = state === "gameover";
+
   snake.forEach((part, index) => {
     if (index === 0) {
       ctx.save();
-      ctx.shadowColor = "#aaff76";
-      ctx.shadowBlur = 8;
-      drawRoundedCell(part.x, part.y, "#c7ff89", 1.5);
+      ctx.shadowColor = isDead ? "#bcbcbc" : "#aaff76";
+      ctx.shadowBlur = isDead ? 3 : 8;
+      drawRoundedCell(part.x, part.y, isDead ? "#d6d6d6" : "#c7ff89", 1.5);
       ctx.restore();
       return;
     }
 
     const fade = snake.length > 2 ? (index - 1) / (snake.length - 2) : 0;
+    if (isDead) {
+      const shade = Math.round(164 - fade * 76);
+      drawRoundedCell(part.x, part.y, `rgb(${shade}, ${shade}, ${shade})`, 2.5);
+      return;
+    }
+
     const red = Math.round(142 - fade * 67);
     const green = Math.round(227 - fade * 61);
     const blue = Math.round(109 - fade * 19);
