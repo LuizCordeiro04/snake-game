@@ -23,6 +23,12 @@
   const currentAccountEmail = document.getElementById("currentAccountEmail");
   const accountPasswordForm = document.getElementById("accountPasswordForm");
   const passwordReauthForm = document.getElementById("passwordReauthForm");
+  const deleteAccountForm = document.getElementById("deleteAccountForm");
+  const deletePassword = deleteAccountForm.querySelector('input[name="password"]');
+  const deleteConfirmation = deleteAccountForm.querySelector('input[name="confirmation"]');
+  const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+  const cancelDeleteButton = document.getElementById("cancelDeleteButton");
+  const closeAccountButton = document.getElementById("closeAccountButton");
   const accountViews = {
     overview: document.getElementById("accountOverview"),
     nickname: document.getElementById("nicknameView"),
@@ -31,6 +37,8 @@
     password: document.getElementById("passwordView"),
     passwordReauth: document.getElementById("passwordReauthView"),
     passwordSuccess: document.getElementById("passwordSuccessView"),
+    deleteAccount: document.getElementById("deleteAccountView"),
+    deleteSuccess: document.getElementById("deleteSuccessView"),
   };
   const views = {
     login: document.getElementById("loginView"),
@@ -44,6 +52,8 @@
   let profileRequest = 0;
   let recoveryIntent = callbackType === "recovery";
   let accountFlow = 0;
+  let deletePending = false;
+  let deletedSessionNeedsReload = false;
 
   function hidePasswordFields(scope) {
     scope.querySelectorAll(".password-field").forEach((field) => {
@@ -106,6 +116,7 @@
 
   function showAccountView(name) {
     Object.entries(accountViews).forEach(([key, view]) => { view.hidden = key !== name; });
+    closeAccountButton.hidden = name === "deleteSuccess";
     showMessage(accountMessage, "");
     if (name === "nickname") {
       currentNickname.textContent = accountNickname.textContent;
@@ -126,12 +137,16 @@
   }
 
   function returnToAccount() {
+    if (deletePending) return;
     ++accountFlow;
     clearAccountPasswords();
+    deleteAccountForm.reset();
+    confirmDeleteButton.disabled = true;
     showAccountView("overview");
   }
 
   function closeAccount() {
+    if (deletePending) return;
     accountScreen.classList.remove("is-visible");
     returnToAccount();
     document.getElementById("openAccountButton").focus();
@@ -197,7 +212,7 @@
       guestRow.hidden = false;
       userRow.hidden = true;
       nicknameEl.textContent = "";
-      accountScreen.classList.remove("is-visible");
+      if (accountViews.deleteSuccess.hidden) accountScreen.classList.remove("is-visible");
       clearAccountPasswords();
       accountNickname.textContent = "—";
       accountEmail.textContent = "—";
@@ -359,7 +374,84 @@
     showAccountView("password");
   });
   document.getElementById("deleteAccountButton").addEventListener("click", () => {
-    showMessage(accountMessage, "Função ainda não disponível nesta versão de desenvolvimento.");
+    deleteAccountForm.reset();
+    hidePasswordFields(accountScreen);
+    confirmDeleteButton.disabled = true;
+    showAccountView("deleteAccount");
+  });
+  function updateDeleteButton() {
+    confirmDeleteButton.disabled = deletePending || !deletePassword.value || deleteConfirmation.value !== "EXCLUIR";
+  }
+  deletePassword.addEventListener("input", updateDeleteButton);
+  deleteConfirmation.addEventListener("input", updateDeleteButton);
+  cancelDeleteButton.addEventListener("click", returnToAccount);
+  document.getElementById("deleteSuccessOkButton").addEventListener("click", () => {
+    accountScreen.classList.remove("is-visible");
+    returnToAccount();
+    document.getElementById("playButton").focus();
+    if (deletedSessionNeedsReload) window.location.reload();
+  });
+  deleteAccountForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (deletePending || !deletePassword.value || deleteConfirmation.value !== "EXCLUIR") return;
+
+    deletePending = true;
+    updateDeleteButton();
+    confirmDeleteButton.classList.add("is-processing");
+    cancelDeleteButton.disabled = true;
+    closeAccountButton.disabled = true;
+    showMessage(accountMessage, "Excluindo conta...");
+    try {
+      const { data, error } = await client.functions.invoke("delete-account", {
+        method: "POST",
+        body: { password: deletePassword.value },
+      });
+      if (error) {
+        let code;
+        try { code = (await error.context?.json())?.code; } catch { /* Network failures have no JSON response. */ }
+        if (code === "INVALID_PASSWORD") {
+          showMessage(accountMessage, "Senha atual incorreta.", true);
+        } else if (code === "UNAUTHORIZED") {
+          showMessage(accountMessage, "Sua sessão expirou. Entre novamente.", true);
+        } else if (code === "RATE_LIMITED") {
+          showMessage(accountMessage, "Muitas tentativas. Aguarde um pouco e tente novamente.", true);
+        } else {
+          showMessage(accountMessage, "Não foi possível confirmar a exclusão. Verifique sua conexão e tente novamente.", true);
+        }
+        return;
+      }
+      if (data?.deleted !== true) {
+        showMessage(accountMessage, "Não foi possível confirmar a exclusão. Tente novamente.", true);
+        return;
+      }
+
+      deleteAccountForm.reset();
+      hidePasswordFields(accountScreen);
+      showAccountView("deleteSuccess");
+      let signOutFailed = false;
+      try {
+        const { error: signOutError } = await client.auth.signOut({ scope: "local" });
+        signOutFailed = Boolean(signOutError);
+      } catch {
+        signOutFailed = true;
+      }
+      if (signOutFailed) {
+        deletedSessionNeedsReload = true;
+        try {
+          const projectRef = new URL(config.url).hostname.split(".")[0];
+          localStorage.removeItem(`sb-${projectRef}-auth-token`);
+        } catch { /* Keep the confirmed result visible; reload will recheck the session. */ }
+      }
+      await syncAccount(null);
+    } catch {
+      showMessage(accountMessage, "Não foi possível confirmar a exclusão. Verifique sua conexão e tente novamente.", true);
+    } finally {
+      deletePending = false;
+      confirmDeleteButton.classList.remove("is-processing");
+      cancelDeleteButton.disabled = false;
+      closeAccountButton.disabled = false;
+      updateDeleteButton();
+    }
   });
   for (const id of ["cancelEmailButton", "emailPendingOkButton", "cancelPasswordButton", "cancelReauthButton", "passwordSuccessOkButton"]) {
     document.getElementById(id).addEventListener("click", returnToAccount);

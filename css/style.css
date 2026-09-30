@@ -67,6 +67,15 @@ button.secondary:focus-visible {
   background: var(--panel-soft);
 }
 
+button.secondary.danger-button {
+  border-color: #9f5055;
+  color: #ff9da3;
+}
+
+button.secondary.danger-button:disabled:not(.is-processing) {
+  cursor: not-allowed;
+}
+
 .shell {
   position: relative;
   width: min(92vw, 560px);

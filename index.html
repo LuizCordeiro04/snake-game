@@ -226,6 +226,21 @@
             <p class="account-copy">Sua senha foi atualizada com sucesso.</p>
             <button id="passwordSuccessOkButton" type="button">OK</button>
           </div>
+          <div id="deleteAccountView" class="auth-view" hidden>
+            <h2>EXCLUIR CONTA?</h2>
+            <p class="account-copy">Esta ação é permanente. Sua conta, recorde e histórico de partidas serão excluídos.</p>
+            <form id="deleteAccountForm" class="auth-form">
+              <label>SENHA ATUAL<input name="password" type="password" autocomplete="current-password" required /></label>
+              <label>Digite EXCLUIR para confirmar<input name="confirmation" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required /></label>
+              <button id="confirmDeleteButton" type="submit" class="secondary danger-button" disabled>EXCLUIR CONTA</button>
+            </form>
+            <button id="cancelDeleteButton" type="button" class="secondary">CANCELAR</button>
+          </div>
+          <div id="deleteSuccessView" class="auth-view" hidden>
+            <h2>CONTA EXCLUÍDA</h2>
+            <p class="account-copy">Sua conta e seus dados online foram excluídos.</p>
+            <button id="deleteSuccessOkButton" type="button">OK</button>
+          </div>
           <p id="accountMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
           <button id="closeAccountButton" type="button" class="secondary">VOLTAR AO MENU</button>
         </div>
